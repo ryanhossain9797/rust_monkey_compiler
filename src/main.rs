@@ -9,7 +9,7 @@ use token::*;
 
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
-    println!("Type in commands");
+    println!("Type in commands\nGo to new line and press CTRL-D to run");
 
     start(stdin(), stdout()).await
 }

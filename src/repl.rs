@@ -3,13 +3,13 @@ use std::io::{Read, Stdin, Stdout, Write};
 
 const PROMPT: &str = ">>";
 
-pub async fn start(input: Stdin, mut output: Stdout) -> anyhow::Result<()> {
+pub async fn start(mut input: Stdin, mut output: Stdout) -> anyhow::Result<()> {
     print!("{} ", PROMPT);
     output.flush()?;
 
     let mut code = String::new();
 
-    input.read_line(&mut code)?;
+    input.read_to_string(&mut code)?;
 
     let mut lexer = Lexer::new(code);
 
