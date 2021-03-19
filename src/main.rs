@@ -1,7 +1,9 @@
+mod ast;
 mod lexer;
 mod repl;
 mod token;
 
+use ast::*;
 use lexer::*;
 use repl::*;
 use std::io::{stdin, stdout};
