@@ -9,7 +9,7 @@ pub trait Statement: Node {}
 pub trait Expression: Node {}
 
 pub struct Program {
-    statements: Vec<Box<dyn Statement>>,
+    pub statements: Vec<Box<dyn Statement>>,
 }
 
 impl Node for Program {

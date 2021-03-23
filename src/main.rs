@@ -1,10 +1,12 @@
 mod ast;
 mod lexer;
+mod parser;
 mod repl;
 mod token;
 
 use ast::*;
 use lexer::*;
+use parser::*;
 use repl::*;
 use std::io::{stdin, stdout};
 use token::*;

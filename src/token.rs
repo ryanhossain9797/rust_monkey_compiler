@@ -2,6 +2,7 @@
 
 use std::fmt::{Display, Formatter};
 
+#[derive(Clone)]
 pub enum Token {
     ILLEGAL,
     EOF,
