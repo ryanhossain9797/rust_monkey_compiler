@@ -24,8 +24,24 @@ impl Parser {
         self.peek_token = self.l.next_token();
     }
 
-    pub fn parse_program(&self) -> Option<Program> {
-        None
+    pub fn parse_program(&mut self) -> Program {
+        let mut program = Program::new();
+
+        while self.cur_token != token::Token::EOF {
+            let maybe_statement = self.parse_statement();
+            if let Some(statement) = maybe_statement {
+                program.statements.push(statement);
+            }
+            self.next_token();
+        }
+        program
+    }
+
+    pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
+        match self.cur_token {
+            Token::LET => None, //self.parse_let_statement(), RESUME HERE
+            _ => None,
+        }
     }
 }
 
@@ -41,26 +57,20 @@ mod tests {
             .to_string();
 
         let l = Lexer::new(input);
-        let parser = Parser::new(l);
+        let mut parser = Parser::new(l);
 
-        let maybe_program = parser.parse_program();
+        let program = parser.parse_program();
+        if program.statements.len() != 3 {
+            panic!(
+                "program has incorrect number of statements: {}",
+                program.statements.len()
+            );
+        } else {
+            let tests = ["x", "y", "foobar"];
 
-        match maybe_program {
-            None => panic!("program returned null"),
-            Some(program) => {
-                if program.statements.len() != 3 {
-                    panic!(
-                        "program has incorrect number of statements: {}",
-                        program.statements.len()
-                    );
-                } else {
-                    let tests = ["x", "y", "foobar"];
-
-                    for (index, test) in tests.iter().enumerate() {
-                        let statement = &program.statements[index];
-                        assert!(test_statement(statement, test))
-                    }
-                }
+            for (index, test) in tests.iter().enumerate() {
+                let statement = &program.statements[index];
+                assert!(test_statement(statement, test))
             }
         }
 
