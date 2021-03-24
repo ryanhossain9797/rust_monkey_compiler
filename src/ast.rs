@@ -1,10 +1,13 @@
 use super::token::*;
+use std::any::Any;
 
 pub trait Node {
     fn token_literal(&self) -> String;
 }
 
-pub trait Statement: Node {}
+pub trait Statement: Node {
+    fn as_any(&self) -> &dyn Any;
+}
 
 pub trait Expression: Node {}
 
@@ -31,9 +34,9 @@ impl Node for Program {
 }
 
 pub struct LetStatement {
-    token: Token,
-    name: Identifier,
-    value: Box<dyn Expression>,
+    pub token: Token,
+    pub name: Identifier,
+    pub value: Option<Box<dyn Expression>>,
 }
 
 impl Node for LetStatement {
@@ -42,11 +45,15 @@ impl Node for LetStatement {
     }
 }
 
-impl Statement for LetStatement {}
+impl Statement for LetStatement {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 
 pub struct Identifier {
-    token: Token,
-    value: String,
+    pub token: Token,
+    pub value: String,
 }
 
 impl Node for Identifier {

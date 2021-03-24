@@ -39,8 +39,58 @@ impl Parser {
 
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
         match self.cur_token {
-            Token::LET => None, //self.parse_let_statement(), RESUME HERE
+            Token::LET => match self.parse_let_statement() {
+                Some(statement) => Some(Box::new(statement)),
+                None => None,
+            },
             _ => None,
+        }
+    }
+
+    pub fn parse_let_statement(&mut self) -> Option<LetStatement> {
+        let ident_token = self.cur_token.clone();
+
+        if !self.expect_peek(Token::IDENT("".to_string())) {
+            return None;
+        }
+        let assign_token = self.cur_token.clone();
+
+        if !self.expect_peek(Token::ASSIGN) {
+            return None;
+        }
+
+        while !self.cur_token_is(Token::SEMICOLON) {
+            self.next_token();
+        }
+        Some(LetStatement {
+            token: ident_token,
+            name: Identifier {
+                token: assign_token.clone(),
+                value: assign_token.to_string(),
+            },
+            value: None,
+        })
+    }
+
+    pub fn cur_token_is(&self, token: Token) -> bool {
+        match (&self.cur_token, &token) {
+            (Token::IDENT(_), Token::IDENT(_)) => true,
+            (Token::INT(_), Token::INT(_)) => true,
+            (cur_token, token) => cur_token == token,
+        }
+    }
+
+    pub fn peek_token_is(&self, token: Token) -> bool {
+        self.peek_token == token
+    }
+
+    pub fn expect_peek(&mut self, token: Token) -> bool {
+        match self.peek_token_is(token) {
+            true => {
+                self.next_token();
+                true
+            }
+            false => false,
         }
     }
 }
@@ -70,13 +120,34 @@ mod tests {
 
             for (index, test) in tests.iter().enumerate() {
                 let statement = &program.statements[index];
-                assert!(test_statement(statement, test))
+                test_let_statement(statement, test)
             }
         }
 
         panic!();
     }
-    fn test_statement(statement: &Box<dyn Statement>, expected_identifier: &str) -> bool {
-        true
+    fn test_let_statement(statement: &Box<dyn Statement>, expected_identifier: &str) {
+        if &statement.token_literal() != "let" {
+            panic!("token literal is not let, {}", statement.token_literal());
+        }
+        let let_statement = match statement.as_any().downcast_ref::<LetStatement>() {
+            Some(statement) => statement,
+            None => panic!("Not a let statement"),
+        };
+
+        if (&let_statement.name.value != expected_identifier) {
+            panic!(
+                "expected identifier doesn't match {}, {}",
+                let_statement.name.value, expected_identifier
+            )
+        }
+
+        if let_statement.token_literal() != expected_identifier {
+            panic!(
+                "statement name not {}, got {}",
+                expected_identifier,
+                let_statement.token_literal()
+            )
+        }
     }
 }
