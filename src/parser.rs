@@ -28,8 +28,10 @@ impl Parser {
         let mut program = Program::new();
 
         while self.cur_token != token::Token::EOF {
+            println!("parsing statement");
             let maybe_statement = self.parse_statement();
             if let Some(statement) = maybe_statement {
+                println!("got a statement");
                 program.statements.push(statement);
             }
             self.next_token();
@@ -38,12 +40,18 @@ impl Parser {
     }
 
     pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
-        match self.cur_token {
-            Token::LET => match self.parse_let_statement() {
-                Some(statement) => Some(Box::new(statement)),
-                None => None,
-            },
-            _ => None,
+        match &self.cur_token {
+            Token::LET => {
+                println!("got let statement token");
+                match self.parse_let_statement() {
+                    Some(statement) => Some(Box::new(statement)),
+                    None => None,
+                }
+            }
+            token => {
+                println!("got token: {}", token.to_string());
+                None
+            }
         }
     }
 
@@ -53,7 +61,8 @@ impl Parser {
         if !self.expect_peek(Token::IDENT("".to_string())) {
             return None;
         }
-        let assign_token = self.cur_token.clone();
+
+        let name_token = self.cur_token.clone();
 
         if !self.expect_peek(Token::ASSIGN) {
             return None;
@@ -65,8 +74,11 @@ impl Parser {
         Some(LetStatement {
             token: ident_token,
             name: Identifier {
-                token: assign_token.clone(),
-                value: assign_token.to_string(),
+                token: name_token.clone(),
+                value: match name_token {
+                    Token::IDENT(x) => x,
+                    _ => return None,
+                },
             },
             value: None,
         })
@@ -81,7 +93,11 @@ impl Parser {
     }
 
     pub fn peek_token_is(&self, token: Token) -> bool {
-        self.peek_token == token
+        match (&self.peek_token, &token) {
+            (Token::IDENT(_), Token::IDENT(_)) => true,
+            (Token::INT(_), Token::INT(_)) => true,
+            (peek_token, token) => peek_token == token,
+        }
     }
 
     pub fn expect_peek(&mut self, token: Token) -> bool {
@@ -111,10 +127,7 @@ mod tests {
 
         let program = parser.parse_program();
         if program.statements.len() != 3 {
-            panic!(
-                "program has incorrect number of statements: {}",
-                program.statements.len()
-            );
+            panic!(program.statements.len());
         } else {
             let tests = ["x", "y", "foobar"];
 
@@ -123,11 +136,10 @@ mod tests {
                 test_let_statement(statement, test)
             }
         }
-
-        panic!();
     }
+
     fn test_let_statement(statement: &Box<dyn Statement>, expected_identifier: &str) {
-        if &statement.token_literal() != "let" {
+        if &statement.token_literal() != "LET" {
             panic!("token literal is not let, {}", statement.token_literal());
         }
         let let_statement = match statement.as_any().downcast_ref::<LetStatement>() {
@@ -142,7 +154,7 @@ mod tests {
             )
         }
 
-        if let_statement.token_literal() != expected_identifier {
+        if let_statement.name.value != expected_identifier {
             panic!(
                 "statement name not {}, got {}",
                 expected_identifier,
